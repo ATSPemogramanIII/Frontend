@@ -1,131 +1,65 @@
+import React from "react";
+import { useUlasan } from "../../hooks/useUlasan";
 import {
-    MagnifyingGlassIcon,
-    ChevronUpDownIcon,
-  } from "@heroicons/react/24/outline";
-  import { PencilIcon, UserPlusIcon } from "@heroicons/react/24/solid";
-  import {
-    Card,
-    CardHeader,
-    Input,
-    Typography,
-    Button,
-    CardBody,
-    Chip,
-    CardFooter,
-    Tabs,
-    TabsHeader,
-    Tab,
-    Avatar,
-    IconButton,
-    Tooltip,
-  } from "@material-tailwind/react";
-   
-  const TABS = [
-    {
-      label: "All",
-      value: "all",
-    },
-    {
-      label: "Monitored",
-      value: "monitored",
-    },
-    {
-      label: "Unmonitored",
-      value: "unmonitored",
-    },
-  ];
-   
-  const TABLE_HEAD = ["Member", "Function", "Status", "Employed", ""];
-   
-  const TABLE_ROWS = [
-    {
-      img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-3.jpg",
-      name: "John Michael",
-      email: "john@creative-tim.com",
-      job: "Manager",
-      org: "Organization",
-      online: true,
-      date: "23/04/18",
-    },
-    {
-      img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-2.jpg",
-      name: "Alexa Liras",
-      email: "alexa@creative-tim.com",
-      job: "Programator",
-      org: "Developer",
-      online: false,
-      date: "23/04/18",
-    },
-    {
-      img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-1.jpg",
-      name: "Laurent Perrier",
-      email: "laurent@creative-tim.com",
-      job: "Executive",
-      org: "Projects",
-      online: false,
-      date: "19/09/17",
-    },
-    {
-      img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-4.jpg",
-      name: "Michael Levi",
-      email: "michael@creative-tim.com",
-      job: "Programator",
-      org: "Developer",
-      online: true,
-      date: "24/12/08",
-    },
-    {
-      img: "https://demos.creative-tim.com/test/corporate-ui-dashboard/assets/img/team-5.jpg",
-      name: "Richard Gran",
-      email: "richard@creative-tim.com",
-      job: "Manager",
-      org: "Executive",
-      online: false,
-      date: "04/10/21",
-    },
-  ];
-   
-  export function UlasanTable() {
-    return (
-      <Card className="h-full w-full">
-        <CardHeader floated={false} shadow={false} className="rounded-none">
-          <div className="mb-8 flex items-center justify-between gap-8">
-            <div>
-              <Typography variant="h5" color="blue-gray">
-                Members list
-              </Typography>
-              <Typography color="gray" className="mt-1 font-normal">
-                See information about all members
-              </Typography>
-            </div>
-            <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
-              <Button variant="outlined" size="sm">
-                view all
-              </Button>
-              <Button className="flex items-center gap-3" size="sm">
-                <UserPlusIcon strokeWidth={2} className="h-4 w-4" /> Add member
-              </Button>
-            </div>
+  MagnifyingGlassIcon,
+  ChevronUpDownIcon,
+  TrashIcon,
+} from "@heroicons/react/24/outline";
+import { PencilIcon } from "@heroicons/react/24/solid";
+import {
+  Card,
+  CardHeader,
+  Input,
+  Typography,
+  Button,
+  CardBody,
+  Chip,
+  CardFooter,
+  IconButton,
+  Tooltip,
+} from "@material-tailwind/react";
+
+const TABLE_HEAD = ["Nama Pengguna", "Kode Paket","Rating", "Komentar", "Tanggal", "Aksi"];
+
+export function UlasanTable() {
+  const { ulasans, loading, error, retry } = useUlasan();
+
+  return (
+    <Card className="h-full w-full">
+      <CardHeader floated={false} shadow={false} className="rounded-none">
+        <div className="mb-8 flex items-center justify-between gap-8">
+          <div>
+            <Typography variant="h5" color="blue-gray">
+              Daftar Ulasan
+            </Typography>
+            <Typography color="gray" className="mt-1 font-normal">
+              Lihat semua ulasan dari pengguna
+            </Typography>
           </div>
-          <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-            <Tabs value="all" className="w-full md:w-max">
-              <TabsHeader>
-                {TABS.map(({ label, value }) => (
-                  <Tab key={value} value={value}>
-                    &nbsp;&nbsp;{label}&nbsp;&nbsp;
-                  </Tab>
-                ))}
-              </TabsHeader>
-            </Tabs>
-            <div className="w-full md:w-72">
-              <Input
-                label="Search"
-                icon={<MagnifyingGlassIcon className="h-5 w-5" />}
-              />
-            </div>
+          <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+            <Button variant="outlined" size="sm" onClick={retry}>
+              Refresh
+            </Button>
           </div>
-        </CardHeader>
-        <CardBody className="overflow-scroll px-0">
+        </div>
+        <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div className="w-full md:w-72">
+            <Input
+              label="Search"
+              icon={<MagnifyingGlassIcon className="h-5 w-5" />}
+            />
+          </div>
+        </div>
+      </CardHeader>
+
+      <CardBody className="overflow-scroll px-0">
+        {loading ? (
+          <Typography className="p-4">Loading...</Typography>
+        ) : error ? (
+          <Typography className="p-4 text-red-500">
+            Error: {error.message}
+          </Typography>
+        ) : (
           <table className="mt-4 w-full min-w-max table-auto text-left">
             <thead>
               <tr>
@@ -139,9 +73,12 @@ import {
                       color="blue-gray"
                       className="flex items-center justify-between gap-2 font-normal leading-none opacity-70"
                     >
-                      {head}{" "}
+                      {head}
                       {index !== TABLE_HEAD.length - 1 && (
-                        <ChevronUpDownIcon strokeWidth={2} className="h-4 w-4" />
+                        <ChevronUpDownIcon
+                          strokeWidth={2}
+                          className="h-4 w-4"
+                        />
                       )}
                     </Typography>
                   </th>
@@ -149,100 +86,85 @@ import {
               </tr>
             </thead>
             <tbody>
-              {TABLE_ROWS.map(
-                ({ img, name, email, job, org, online, date }, index) => {
-                  const isLast = index === TABLE_ROWS.length - 1;
-                  const classes = isLast
-                    ? "p-4"
-                    : "p-4 border-b border-blue-gray-50";
-   
-                  return (
-                    <tr key={name}>
-                      <td className={classes}>
-                        <div className="flex items-center gap-3">
-                          <Avatar src={img} alt={name} size="sm" />
-                          <div className="flex flex-col">
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal"
-                            >
-                              {name}
-                            </Typography>
-                            <Typography
-                              variant="small"
-                              color="blue-gray"
-                              className="font-normal opacity-70"
-                            >
-                              {email}
-                            </Typography>
-                          </div>
-                        </div>
-                      </td>
-                      <td className={classes}>
-                        <div className="flex flex-col">
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal"
+              {ulasans.map((item, index) => {
+                const isLast = index === ulasans.length - 1;
+                const classes = isLast
+                  ? "p-4"
+                  : "p-4 border-b border-blue-gray-50";
+                return (
+                  <tr key={item._id}>
+                    <td className={classes}>
+                      <Typography variant="small" color="blue-gray">
+                        {item.nama_pengguna}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Typography variant="small" color="blue-gray">
+                        {item.kode_paket}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Chip
+                        value={item.rating + " ⭐"}
+                        color="amber"
+                        size="sm"
+                      />
+                    </td>
+                    <td className={classes}>
+                      <Typography variant="small" color="blue-gray">
+                        {item.komentar}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <Typography variant="small" color="blue-gray">
+                        {new Date(item.tanggal).toLocaleDateString("id-ID")}
+                      </Typography>
+                    </td>
+                    <td className={classes}>
+                      <div className="flex gap-2">
+                        <Tooltip content="Edit">
+                          <IconButton
+                            variant="text"
+                            color="blue"
+                            onClick={() => handleEdit(p._id)}
                           >
-                            {job}
-                          </Typography>
-                          <Typography
-                            variant="small"
-                            color="blue-gray"
-                            className="font-normal opacity-70"
-                          >
-                            {org}
-                          </Typography>
-                        </div>
-                      </td>
-                      <td className={classes}>
-                        <div className="w-max">
-                          <Chip
-                            variant="ghost"
-                            size="sm"
-                            value={online ? "online" : "offline"}
-                            color={online ? "green" : "blue-gray"}
-                          />
-                        </div>
-                      </td>
-                      <td className={classes}>
-                        <Typography
-                          variant="small"
-                          color="blue-gray"
-                          className="font-normal"
-                        >
-                          {date}
-                        </Typography>
-                      </td>
-                      <td className={classes}>
-                        <Tooltip content="Edit User">
-                          <IconButton variant="text">
                             <PencilIcon className="h-4 w-4" />
                           </IconButton>
                         </Tooltip>
-                      </td>
-                    </tr>
-                  );
-                },
-              )}
+                        <Tooltip content="Hapus">
+                          <IconButton
+                            variant="text"
+                            color="red"
+                            onClick={() => handleDelete(p._id)}
+                          >
+                            <TrashIcon className="h-4 w-4" />
+                          </IconButton>
+                        </Tooltip>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
-        </CardBody>
-        <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
-          <Typography variant="small" color="blue-gray" className="font-normal">
-            Page 1 of 10
-          </Typography>
-          <div className="flex gap-2">
-            <Button variant="outlined" size="sm">
-              Previous
-            </Button>
-            <Button variant="outlined" size="sm">
-              Next
-            </Button>
-          </div>
-        </CardFooter>
-      </Card>
-    );
-  }
+        )}
+      </CardBody>
+
+      <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
+        <Typography variant="small" color="blue-gray" className="font-normal">
+          {ulasans.length === 0
+            ? "No data"
+            : `Menampilkan ${ulasans.length} ulasan`}
+        </Typography>
+        <div className="flex gap-2">
+          <Button variant="outlined" size="sm" disabled>
+            Previous
+          </Button>
+          <Button variant="outlined" size="sm" disabled>
+            Next
+          </Button>
+        </div>
+      </CardFooter>
+    </Card>
+  );
+}

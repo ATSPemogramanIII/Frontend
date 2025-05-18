@@ -12,9 +12,9 @@ export function Sidebar({ open, onLinkClick }) {
   const location = useLocation();
 
   const menus = [
-    { name: "Home", path: "/", icon: HomeIcon },
-    { name: "Mahasiswa", path: "/mahasiswa", icon: UsersIcon },
-    { name: "Settings", path: "/settings", icon: Cog6ToothIcon },
+    { name: "Paket Wisata", path: "/", icon: HomeIcon },
+    { name: "Pemesanan", path: "/pemesanan", icon: UsersIcon },
+    { name: "Ulasan", path: "/ulasan", icon: Cog6ToothIcon },
   ];
 
   return (
