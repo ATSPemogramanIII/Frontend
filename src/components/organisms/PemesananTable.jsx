@@ -187,7 +187,7 @@ export function PemesananTable() {
               size="sm"
               onClick={() => setOpenAdd(true)}
             >
-              <UserPlusIcon className="h-4 w-4" /> Tambah Data
+              <UserPlusIcon className="h-4 w-4" /> Tambah Pemesanan
             </Button>
           </div>
         </div>

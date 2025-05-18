@@ -173,7 +173,7 @@ export function UlasanTable() {
                 setEditing(null); // pastikan tidak sedang edit
               }}
             >
-              <UserPlusIcon className="h-4 w-4" /> Tambah Data
+              <UserPlusIcon className="h-4 w-4" /> Tambah Ulasan
             </Button>
           </div>
         </div>

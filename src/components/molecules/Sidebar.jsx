@@ -1,56 +1,79 @@
 import {
   Card,
+  Typography,
   List,
   ListItem,
   ListItemPrefix,
-  Typography,
 } from "@material-tailwind/react";
-import { HomeIcon, UsersIcon, Cog6ToothIcon } from "@heroicons/react/24/solid";
+import {
+  PresentationChartBarIcon,
+  ShoppingBagIcon,
+  ClipboardDocumentListIcon,
+  ChatBubbleLeftEllipsisIcon,
+  Cog6ToothIcon,
+  ArrowRightOnRectangleIcon,
+} from "@heroicons/react/24/solid";
 import { Link, useLocation } from "react-router-dom";
 
 export function Sidebar({ open, onLinkClick }) {
   const location = useLocation();
 
   const menus = [
-    { name: "Paket Wisata", path: "/", icon: HomeIcon },
-    { name: "Pemesanan", path: "/pemesanan", icon: UsersIcon },
-    { name: "Ulasan", path: "/ulasan", icon: Cog6ToothIcon },
+    { name: "Dashboard Paket", path: "/", icon: PresentationChartBarIcon },
+    { name: "Data Pemesanan", path: "/pemesanan", icon: ShoppingBagIcon },
+    {
+      name: "Ulasan Pelanggan",
+      path: "/ulasan",
+      icon: ChatBubbleLeftEllipsisIcon,
+    },
+    // {
+    //   name: "Manajemen Paket",
+    //   path: "/manajemen-paket",
+    //   icon: ClipboardDocumentListIcon,
+    // },
+    { name: "Pengaturan", path: "/settings", icon: Cog6ToothIcon },
+    { name: "Keluar", path: "/logout", icon: ArrowRightOnRectangleIcon },
   ];
 
   return (
     <aside
-      className={`fixed top-0 left-0 z-50 h-screen bg-blue-gray-900 shadow-md transform ${
-        open ? "translate-x-0" : "-translate-x-full"
-      } transition-transform duration-300 w-64`}
+      className={`fixed top-16 left-0 z-50 h-[calc(100vh-4rem)] w-64 bg-white shadow-lg transition-transform duration-300
+        ${open ? "translate-x-0" : "-translate-x-full"}
+      `}
+      style={{ paddingTop: "1rem", paddingBottom: "1rem" }}
     >
-      <Card className="h-full p-4 bg-blue-gray-900">
-        <div className="mb-6 flex justify-center">
-          <Typography variant="h5" color="white">
-            Dashboard
-          </Typography>
-        </div>
-        <List>
-          {menus.map((menu, idx) => {
-            const Icon = menu.icon;
-            const active = location.pathname === menu.path;
+      <Card className="h-full bg-white shadow-none p-4">
+        <Typography
+          variant="h5"
+          color="blue-gray"
+          className="mb-6 text-center font-semibold"
+        >
+          TourApp
+        </Typography>
 
+        <List>
+          {menus.map(({ name, path, icon: Icon }, idx) => {
+            const isActive = location.pathname === path;
             return (
               <Link
-                to={menu.path}
+                to={path}
                 key={idx}
-                onClick={() => {
-                  if (onLinkClick) onLinkClick();
-                }}
+                onClick={() => onLinkClick && onLinkClick()}
+                className={`block rounded-md ${
+                  isActive
+                    ? "bg-blue-600 text-white"
+                    : "hover:bg-blue-100 text-blue-gray-700"
+                }`}
               >
-                <ListItem
-                  className={`text-white ${
-                    active ? "bg-blue-700" : "hover:bg-orange-500"
-                  }`}
-                >
+                <ListItem className="cursor-pointer px-3 py-2">
                   <ListItemPrefix>
-                    <Icon className="h-5 w-5 text-white" />
+                    <Icon
+                      className={`h-5 w-5 ${
+                        isActive ? "text-white" : "text-blue-gray-500"
+                      }`}
+                    />
                   </ListItemPrefix>
-                  {menu.name}
+                  {name}
                 </ListItem>
               </Link>
             );
