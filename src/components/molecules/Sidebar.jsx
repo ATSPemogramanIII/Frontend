@@ -28,7 +28,7 @@ export function Sidebar({ open, onLinkClick }) {
     },
     // {
     //   name: "Manajemen Paket",
-    //   path: "/manajemen-paket",
+    //   path: "/PaketDestinasi",
     //   icon: ClipboardDocumentListIcon,
     // },
     { name: "Pengaturan", path: "/settings", icon: Cog6ToothIcon },

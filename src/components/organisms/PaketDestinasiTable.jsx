@@ -23,23 +23,23 @@ import {
   DialogBody,
   DialogFooter,
 } from "@material-tailwind/react";
-import { usePaket } from "../../hooks/usePaket";
+import { usePaketDestinasi } from "../../hooks/usePaketDestinasi";
 import { TypographyAtom } from "../atoms/TypographyAtom";
-import { Link } from "react-router-dom";
 
 const TABLE_HEAD = [
   "Kode Paket",
   "Nama Paket",
   "Tanggal Mulai",
   "Durasi Hari",
-  "Harga",
   "Deskripsi",
-  "Kode Destinasi",
+  "Destinasi",
   "Aksi",
 ];
 
-export function PaketTable() {
-  const { pakets, error, retry } = usePaket();
+export function PaketDestinasiTable() {
+  // Panggil hook dari usePaketDestinasi
+  const { paketDestinasis, error, retry } = usePaketDestinasi();
+
   // State modal tambah data
   const [openAdd, setOpenAdd] = useState(false);
   const [newData, setNewData] = useState({
@@ -48,13 +48,23 @@ export function PaketTable() {
     tanggal_mulai: "",
     durasi_hari: 1,
     deskripsi: "",
-    harga: 0,
-    kode_destinasi: [], // simpan array kode destinasi
+    kode_destinasi: [], // pakai array kode destinasi untuk backend
   });
+
+  // State edit data
+  const [openEdit, setOpenEdit] = useState(false);
+  const [editData, setEditData] = useState({
+    kode_paket: "",
+    nama_paket: "",
+    tanggal_mulai: "",
+    durasi_hari: 1,
+    deskripsi: "",
+    kode_destinasi: [],
+  });
+
   // Fungsi submit tambah paket baru (POST)
   const handleAdd = async () => {
     try {
-      // Validasi sederhana
       if (!newData.kode_paket || !newData.nama_paket) {
         Swal.fire("Error", "Kode Paket dan Nama Paket wajib diisi", "error");
         return;
@@ -70,9 +80,9 @@ export function PaketTable() {
         tanggal_mulai: "",
         durasi_hari: 1,
         deskripsi: "",
-        destinasi: [],
+        kode_destinasi: [],
       });
-      retry(); // refresh data
+      retry();
     } catch (error) {
       Swal.fire(
         "Gagal",
@@ -82,25 +92,13 @@ export function PaketTable() {
     }
   };
 
-  // State untuk edit modal dan data paket yg diedit
-  const [openEdit, setOpenEdit] = useState(false);
-  const [editData, setEditData] = useState({
-    kode_paket: "",
-    nama_paket: "",
-    tanggal_mulai: "",
-    durasi_hari: 1,
-    deskripsi: "",
-    harga: 0,
-    kode_destinasi: [],
-  });
-
   // Fungsi buka modal edit dan set data paket
-  const handleOpenEdit = (paket) => {
+  const handleOpenEdit = (paketWithDest) => {
+    const { PaketWisata, Destinasi } = paketWithDest;
     setEditData({
-      ...paket,
-      // pastikan durasi_hari number dan destinasi array sudah benar
-      durasi_hari: paket.durasi_hari || 1,
-      destinasi: paket.destinasi || [],
+      ...PaketWisata,
+      durasi_hari: PaketWisata.durasi_hari || 1,
+      kode_destinasi: PaketWisata.KodeDestinasi || [],
     });
     setOpenEdit(true);
   };
@@ -112,10 +110,12 @@ export function PaketTable() {
         Swal.fire("Error", "Nama dan Kode Paket wajib diisi", "error");
         return;
       }
+
       await axios.put(
         `http://127.0.0.1:8088/api/paket/${editData.kode_paket}`,
         editData
       );
+
       Swal.fire("Sukses", "Data paket berhasil diperbarui", "success");
       setOpenEdit(false);
       retry();
@@ -128,6 +128,7 @@ export function PaketTable() {
     }
   };
 
+  // Fungsi hapus paket (DELETE)
   const handleDelete = (kode_paket) => {
     Swal.fire({
       title: "Yakin ingin menghapus?",
@@ -227,72 +228,58 @@ export function PaketTable() {
               </tr>
             </thead>
             <tbody>
-              {pakets.map((paket, index) => {
-                const isLast = index === pakets.length - 1;
+              {(paketDestinasis || []).map((item, index) => {
+                const { PaketWisata, Destinasi } = item;
+                const isLast = index === paketDestinasis.length - 1;
                 const classes = isLast
                   ? "p-4"
                   : "p-4 border-b border-blue-gray-50";
 
                 return (
-                  <tr key={paket.kode_paket}>
-                    <td className={classes}>{paket.kode_paket}</td>
-                    <td className={classes}>{paket.nama_paket}</td>
-                    <td className={classes}>{paket.tanggal_mulai}</td>
-                    <td className={classes}>{paket.durasi_hari} hari</td>
+                  <tr key={PaketWisata.kode_paket || PaketWisata.KodePaket}>
                     <td className={classes}>
-                      {new Intl.NumberFormat("id-ID", {
-                        style: "currency",
-                        currency: "IDR",
-                      }).format(paket.harga)}
+                      {PaketWisata.kode_paket || PaketWisata.KodePaket}
                     </td>
-                    <td
-                      className={`${classes} break-words whitespace-pre-wrap max-w-xs`}
-                    >
-                      <Typography
-                        variant="small"
-                        color="gray"
-                        className="whitespace-pre-wrap"
-                      >
-                        {paket.deskripsi}
-                      </Typography>
-                    </td>
-
                     <td className={classes}>
-                      <ul className="list-disc list-inside space-y-1">
-                        {paket.kode_destinasi.map((kd, i) => (
-                          <li key={i}>
-                            <Link
-                              to={`/PaketDestinasi/${kd}`}
-                              className="text-blue-600 hover:underline"
-                            >
-                              {kd} - Detail
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
+                      {PaketWisata.nama_paket || PaketWisata.NamaPaket}
                     </td>
-
                     <td className={classes}>
-                      <div className="flex items-center gap-2">
-                        <Tooltip content="Edit">
-                          <IconButton
-                            variant="text"
-                            color="blue"
-                            onClick={() => handleOpenEdit(paket)}
-                          >
-                            <PencilIcon className="h-4 w-4" />
-                          </IconButton>
-                        </Tooltip>
-                        <Tooltip content="Hapus">
-                          <IconButton
-                            variant="text"
-                            color="red"
-                            onClick={() => handleDelete(paket.kode_paket)}
-                          >
-                            <TrashIcon className="h-4 w-4" />
-                          </IconButton>
-                        </Tooltip>
-                      </div>
+                      {PaketWisata.tanggal_mulai || PaketWisata.TanggalMulai}
+                    </td>
+                    <td className={classes}>
+                      {PaketWisata.durasi_hari || PaketWisata.DurasiHari}
+                    </td>
+                    <td className={classes}>
+                      {PaketWisata.deskripsi || PaketWisata.Deskripsi}
+                    </td>
+                    <td className={classes}>
+                      {Destinasi.map(
+                        (d) => d.nama_destinasi || d.NamaDestinasi
+                      ).join(", ")}
+                    </td>
+                    <td className={classes}>
+                      <Tooltip content="Edit Paket Wisata">
+                        <IconButton
+                          variant="text"
+                          color="blue"
+                          onClick={() => handleOpenEdit(item)}
+                        >
+                          <PencilIcon className="h-4 w-4" />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip content="Hapus Paket Wisata">
+                        <IconButton
+                          variant="text"
+                          color="red"
+                          onClick={() =>
+                            handleDelete(
+                              PaketWisata.kode_paket || PaketWisata.KodePaket
+                            )
+                          }
+                        >
+                          <TrashIcon className="h-4 w-4" />
+                        </IconButton>
+                      </Tooltip>
                     </td>
                   </tr>
                 );
@@ -302,73 +289,67 @@ export function PaketTable() {
         </CardBody>
         <CardFooter className="flex items-center justify-between border-t border-blue-gray-50 p-4">
           <Typography variant="small" color="blue-gray" className="font-normal">
-            Page 1 of 1
+            Menampilkan {paketDestinasis.length} dari {paketDestinasis.length}{" "}
+            data
           </Typography>
-          <div className="flex gap-2">
-            <Button variant="outlined" size="sm" disabled>
-              Previous
-            </Button>
-            <Button variant="outlined" size="sm" disabled>
-              Next
-            </Button>
-          </div>
         </CardFooter>
       </Card>
-      {/* Dialog Tambah Paket */}
-      <Dialog open={openAdd} handler={() => setOpenAdd(false)} size="md">
+      {/* Dialog tambah paket */}
+      <Dialog open={openAdd} handler={() => setOpenAdd(!openAdd)}>
         <DialogHeader>Tambah Paket Wisata</DialogHeader>
-        <DialogBody className="space-y-4">
-          <Input
-            label="Kode Paket"
-            value={newData.kode_paket}
-            onChange={(e) =>
-              setNewData({ ...newData, kode_paket: e.target.value })
-            }
-          />
-          <Input
-            label="Nama Paket"
-            value={newData.nama_paket}
-            onChange={(e) =>
-              setNewData({ ...newData, nama_paket: e.target.value })
-            }
-          />
-          <Input
-            label="Harga"
-            type="number"
-            min={0}
-            value={newData.harga}
-            onChange={(e) =>
-              setNewData({ ...newData, harga: parseInt(e.target.value) || 0 })
-            }
-          />
-          <Input
-            label="Tanggal Mulai"
-            type="date"
-            value={newData.tanggal_mulai}
-            onChange={(e) =>
-              setNewData({ ...newData, tanggal_mulai: e.target.value })
-            }
-          />
-          <Input
-            label="Durasi Hari"
-            type="number"
-            min={1}
-            value={newData.durasi_hari}
-            onChange={(e) =>
-              setNewData({
-                ...newData,
-                durasi_hari: parseInt(e.target.value) || 1,
-              })
-            }
-          />
-          <Input
-            label="Deskripsi"
-            value={newData.deskripsi}
-            onChange={(e) =>
-              setNewData({ ...newData, deskripsi: e.target.value })
-            }
-          />
-          {/* Destinasi bisa ditambahkan nanti dengan UI yang sesuai */}
+        <DialogBody divider>
+          <div className="flex flex-col gap-4">
+            <Input
+              label="Kode Paket"
+              value={newData.kode_paket}
+              onChange={(e) =>
+                setNewData({ ...newData, kode_paket: e.target.value })
+              }
+            />
+            <Input
+              label="Nama Paket"
+              value={newData.nama_paket}
+              onChange={(e) =>
+                setNewData({ ...newData, nama_paket: e.target.value })
+              }
+            />
+            <Input
+              type="date"
+              label="Tanggal Mulai"
+              value={newData.tanggal_mulai}
+              onChange={(e) =>
+                setNewData({ ...newData, tanggal_mulai: e.target.value })
+              }
+            />
+            <Input
+              type="number"
+              label="Durasi Hari"
+              value={newData.durasi_hari}
+              onChange={(e) =>
+                setNewData({ ...newData, durasi_hari: Number(e.target.value) })
+              }
+            />
+            <Input
+              label="Deskripsi"
+              value={newData.deskripsi}
+              onChange={(e) =>
+                setNewData({ ...newData, deskripsi: e.target.value })
+              }
+            />
+            {/* Untuk kode_destinasi, bisa pakai select multi atau input text comma separated */}
+            <Input
+              label="Kode Destinasi (pisah koma)"
+              value={newData.kode_destinasi.join(",")}
+              onChange={(e) =>
+                setNewData({
+                  ...newData,
+                  kode_destinasi: e.target.value
+                    .split(",")
+                    .map((v) => v.trim()),
+                })
+              }
+            />
+          </div>
         </DialogBody>
         <DialogFooter>
           <Button
@@ -379,67 +360,64 @@ export function PaketTable() {
           >
             Batal
           </Button>
-          <Button variant="gradient" color="green" onClick={handleAdd}>
+          <Button variant="gradient" onClick={handleAdd}>
             Simpan
           </Button>
         </DialogFooter>
       </Dialog>
 
-      {/* Dialog Edit Paket */}
-      <Dialog open={openEdit} handler={() => setOpenEdit(false)} size="md">
+      {/* Dialog edit paket */}
+      <Dialog open={openEdit} handler={() => setOpenEdit(!openEdit)}>
         <DialogHeader>Edit Paket Wisata</DialogHeader>
-        <DialogBody className="space-y-4">
-          <Input
-            label="Kode Paket"
-            value={editData.kode_paket}
-            onChange={(e) =>
-              setEditData({ ...editData, kode_paket: e.target.value })
-            }
-            disabled
-          />
-          <Input
-            label="Nama Paket"
-            value={editData.nama_paket}
-            onChange={(e) =>
-              setEditData({ ...editData, nama_paket: e.target.value })
-            }
-          />
-          <Input
-            label="Harga"
-            type="number"
-            min={0}
-            value={editData.harga}
-            onChange={(e) =>
-              setEditData({ ...editData, harga: parseInt(e.target.value) || 0 })
-            }
-          />
-          <Input
-            label="Tanggal Mulai"
-            type="date"
-            value={editData.tanggal_mulai}
-            onChange={(e) =>
-              setEditData({ ...editData, tanggal_mulai: e.target.value })
-            }
-          />
-          <Input
-            label="Durasi Hari"
-            type="number"
-            value={editData.durasi_hari}
-            onChange={(e) =>
-              setEditData({
-                ...editData,
-                durasi_hari: parseInt(e.target.value),
-              })
-            }
-          />
-          <Input
-            label="Deskripsi"
-            value={editData.deskripsi}
-            onChange={(e) =>
-              setEditData({ ...editData, deskripsi: e.target.value })
-            }
-          />
-          {/* Kalau ingin edit destinasi, perlu UI tambahan */}
+        <DialogBody divider>
+          <div className="flex flex-col gap-4">
+            <Input label="Kode Paket" value={editData.kode_paket} disabled />
+            <Input
+              label="Nama Paket"
+              value={editData.nama_paket}
+              onChange={(e) =>
+                setEditData({ ...editData, nama_paket: e.target.value })
+              }
+            />
+            <Input
+              type="date"
+              label="Tanggal Mulai"
+              value={editData.tanggal_mulai}
+              onChange={(e) =>
+                setEditData({ ...editData, tanggal_mulai: e.target.value })
+              }
+            />
+            <Input
+              type="number"
+              label="Durasi Hari"
+              value={editData.durasi_hari}
+              onChange={(e) =>
+                setEditData({
+                  ...editData,
+                  durasi_hari: Number(e.target.value),
+                })
+              }
+            />
+            <Input
+              label="Deskripsi"
+              value={editData.deskripsi}
+              onChange={(e) =>
+                setEditData({ ...editData, deskripsi: e.target.value })
+              }
+            />
+            <Input
+              label="Kode Destinasi (pisah koma)"
+              value={editData.kode_destinasi.join(",")}
+              onChange={(e) =>
+                setEditData({
+                  ...editData,
+                  kode_destinasi: e.target.value
+                    .split(",")
+                    .map((v) => v.trim()),
+                })
+              }
+            />
+          </div>
         </DialogBody>
         <DialogFooter>
           <Button
@@ -450,8 +428,8 @@ export function PaketTable() {
           >
             Batal
           </Button>
-          <Button variant="gradient" color="green" onClick={handleUpdate}>
-            Simpan
+          <Button variant="gradient" onClick={handleUpdate}>
+            Update
           </Button>
         </DialogFooter>
       </Dialog>

@@ -1,11 +1,10 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { LayoutDashboard } from "./components/layouts/LayoutDashboard";
-// import { Dashboard } from "./pages/Dashboard";
 import { PaketPage } from "./pages/PaketPage";
 import { PemesananPage } from "./pages/PemesananPage";
 import { UlasanPage } from "./pages/UlasanPage";
-// import { MahasiswaPage } from "./pages/MahasiswaPage";
-// import { SettingsPage } from "./pages/SettingsPage";
+// import { PaketDestinasiPage } from "./pages/PaketDestinasiPAge";
+import { DestinasiDetailPage } from "./pages/DestinasiDetailPage";
 
 export default function App() {
   return (
@@ -15,9 +14,8 @@ export default function App() {
           <Route path="/" element={<PaketPage />} />
           <Route path="/Pemesanan" element={<PemesananPage />} />
           <Route path="/Ulasan" element={<UlasanPage />} />
-          {/* <Route path="/" element={<Dashboard />} />
-          <Route path="/mahasiswa" element={<MahasiswaPage />} /> */}
-          {/* <Route path="/settings" element={<SettingsPage />} /> */}
+          {/* <Route path="/PaketDestinasi" element={<PaketDestinasiPage />} /> */}
+          <Route path="/PaketDestinasi/:id" element={<DestinasiDetailPage />} />
         </Routes>
       </LayoutDashboard>
     </Router>
