@@ -51,6 +51,7 @@ export function PemesananTable() {
 
   const [editData, setEditData] = useState(null);
   const [openEdit, setOpenEdit] = useState(false);
+
   const [newData, setNewData] = useState({
     nama_pemesan: "",
     email: "",
@@ -63,8 +64,34 @@ export function PemesananTable() {
   const [openAdd, setOpenAdd] = useState(false);
 
   const handleAdd = async () => {
+    if (
+      !newData.nama_pemesan ||
+      !newData.email ||
+      !newData.kode_paket ||
+      !newData.tanggal_pesan
+    ) {
+      Swal.fire(
+        "Gagal!",
+        "Harap lengkapi semua data yang wajib diisi.",
+        "error"
+      );
+      return;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newData.email)) {
+      Swal.fire("Gagal!", "Format email tidak valid.", "error");
+      return;
+    }
+
     try {
-      await axios.post("http://127.0.0.1:8088/api/pemesanan", newData);
+      const tanggalPesanISO = new Date(newData.tanggal_pesan).toISOString();
+
+      const response = await axios.post("http://127.0.0.1:8088/api/pemesanan", {
+        ...newData,
+        tanggal_pesan: tanggalPesanISO,
+        status: newData.status.toLowerCase(),
+      });
+
       setOpenAdd(false);
       retry();
       Swal.fire("Berhasil!", "Data pemesanan berhasil ditambahkan.", "success");
@@ -75,11 +102,15 @@ export function PemesananTable() {
         kode_paket: "",
         jumlah_orang: 1,
         tanggal_pesan: "",
-        status: "Pending",
+        status: "pending",
       });
+      if (newData.jumlah_orang <= 0) {
+        Swal.fire("Gagal!", "Jumlah orang harus lebih dari 0.", "error");
+        return;
+      }
     } catch (err) {
+      console.error("Error response backend:", err.response?.data);
       Swal.fire("Gagal!", "Gagal menambahkan data.", "error");
-      console.error(err);
     }
   };
 
@@ -346,9 +377,9 @@ export function PemesananTable() {
             onChange={(e) => setNewData({ ...newData, status: e.target.value })}
             className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
           >
-            <option value="Pending">Pending</option>
-            <option value="Dikonfirmasi">Dikonfirmasi</option>
-            <option value="Dibatalkan">Dibatalkan</option>
+            <option value="pending">Pending</option>
+            <option value="dikonfirmasi">Dikonfirmasi</option>
+            <option value="dibatalkan">Dibatalkan</option>
           </select>
         </DialogBody>
         <DialogFooter>
