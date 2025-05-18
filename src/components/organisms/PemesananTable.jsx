@@ -3,6 +3,7 @@ import {
   ChevronUpDownIcon,
   PencilIcon,
   TrashIcon,
+  UserPlusIcon,
 } from "@heroicons/react/24/outline";
 import {
   Card,
@@ -18,8 +19,16 @@ import {
   IconButton,
   Tooltip,
   Chip,
+  Dialog,
+  DialogHeader,
+  DialogBody,
+  DialogFooter,
 } from "@material-tailwind/react";
+import Swal from "sweetalert2";
+
 import { usePemesanan } from "../../hooks/usePemesanan";
+import axios from "axios";
+import React, { useState } from "react";
 
 const TABLE_HEAD = [
   "Nama Pemesan",
@@ -34,20 +43,93 @@ const TABLE_HEAD = [
 
 export function PemesananTable() {
   const { pemesanans, loading, error, retry } = usePemesanan();
+  const [activeTab, setActiveTab] = useState("all");
+  const filteredPemesanans =
+    activeTab === "all"
+      ? pemesanans
+      : pemesanans.filter((p) => p.status === activeTab);
 
-  const handleEdit = (id) => {
-    console.log("Edit pemesanan:", id);
-    // TODO: Implementasi buka modal atau navigasi ke form edit
+  const [editData, setEditData] = useState(null);
+  const [openEdit, setOpenEdit] = useState(false);
+  const [newData, setNewData] = useState({
+    nama_pemesan: "",
+    email: "",
+    nomor_telepon: "",
+    kode_paket: "",
+    jumlah_orang: 1,
+    tanggal_pesan: "",
+    status: "Pending",
+  });
+  const [openAdd, setOpenAdd] = useState(false);
+
+  const handleAdd = async () => {
+    try {
+      await axios.post("http://127.0.0.1:8088/api/pemesanan", newData);
+      setOpenAdd(false);
+      retry();
+      Swal.fire("Berhasil!", "Data pemesanan berhasil ditambahkan.", "success");
+      setNewData({
+        nama_pemesan: "",
+        email: "",
+        nomor_telepon: "",
+        kode_paket: "",
+        jumlah_orang: 1,
+        tanggal_pesan: "",
+        status: "Pending",
+      });
+    } catch (err) {
+      Swal.fire("Gagal!", "Gagal menambahkan data.", "error");
+      console.error(err);
+    }
+  };
+
+  const handleEdit = (data) => {
+    setEditData(data); // data pemesanan yang ingin diedit
+    setOpenEdit(true); // buka modal
+  };
+
+  const handleUpdate = async () => {
+    try {
+      await axios.put(
+        `http://127.0.0.1:8088/api/pemesanan/${editData._id}`,
+        editData
+      );
+      setOpenEdit(false);
+      retry();
+      Swal.fire({
+        icon: "success",
+        title: "Berhasil",
+        text: "Pemesanan berhasil diperbarui.",
+      });
+    } catch (err) {
+      Swal.fire({
+        icon: "error",
+        title: "Gagal",
+        text: "Gagal memperbarui pemesanan.",
+      });
+      console.error(err);
+    }
   };
 
   const handleDelete = async (id) => {
-    if (confirm("Apakah Anda yakin ingin menghapus data ini?")) {
+    const result = await Swal.fire({
+      title: "Apakah Anda yakin?",
+      text: "Data yang dihapus tidak dapat dikembalikan!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Ya, hapus!",
+      cancelButtonText: "Batal",
+    });
+
+    if (result.isConfirmed) {
       try {
         await axios.delete(`http://127.0.0.1:8088/api/pemesanan/${id}`);
-        alert("Data berhasil dihapus.");
-        retry(); // refresh data
+        retry();
+        Swal.fire("Terhapus!", "Data berhasil dihapus.", "success");
       } catch (err) {
-        alert("Gagal menghapus data.");
+        Swal.fire("Gagal!", "Gagal menghapus data.", "error");
         console.error(err);
       }
     }
@@ -69,13 +151,36 @@ export function PemesananTable() {
             <Button variant="outlined" size="sm" onClick={retry}>
               Refresh
             </Button>
+            <Button
+              className="flex items-center gap-3"
+              size="sm"
+              onClick={() => setOpenAdd(true)}
+            >
+              <UserPlusIcon className="h-4 w-4" /> Tambah Data
+            </Button>
           </div>
         </div>
         <div className="flex flex-col items-center justify-between gap-4 md:flex-row">
-          <Tabs value="all" className="w-full md:w-max">
+          <Tabs value={activeTab} className="w-full md:w-max">
             <TabsHeader>
-              <Tab value="all">Semua</Tab>
-              {/* Bisa tambahkan filter status jika perlu */}
+              <Tab value="all" onClick={() => setActiveTab("all")}>
+                Semua
+              </Tab>
+              <Tab
+                value="Dikonfirmasi"
+                onClick={() => setActiveTab("Dikonfirmasi")}
+              >
+                Dikonfirmasi
+              </Tab>
+              <Tab value="Pending" onClick={() => setActiveTab("Pending")}>
+                Pending
+              </Tab>
+              <Tab
+                value="Dibatalkan"
+                onClick={() => setActiveTab("Dibatalkan")}
+              >
+                Dibatalkan
+              </Tab>
             </TabsHeader>
           </Tabs>
           <div className="w-full md:w-72">
@@ -124,7 +229,7 @@ export function PemesananTable() {
                 </td>
               </tr>
             ) : (
-              pemesanans.map((p, index) => {
+              filteredPemesanans.map((p, index) => {
                 const isLast = index === pemesanans.length - 1;
                 const classes = isLast
                   ? "p-4"
@@ -144,7 +249,13 @@ export function PemesananTable() {
                         size="sm"
                         variant="ghost"
                         value={p.status}
-                        color={p.status === "selesai" ? "green" : "amber"}
+                        color={
+                          p.status.toLowerCase() === "dikonfirmasi"
+                            ? "green"
+                            : p.status.toLowerCase() === "dibatalkan"
+                            ? "red"
+                            : "amber"
+                        }
                       />
                     </td>
                     <td className={classes}>
@@ -153,7 +264,7 @@ export function PemesananTable() {
                           <IconButton
                             variant="text"
                             color="blue"
-                            onClick={() => handleEdit(p._id)}
+                            onClick={() => handleEdit(p)}
                           >
                             <PencilIcon className="h-4 w-4" />
                           </IconButton>
@@ -182,6 +293,155 @@ export function PemesananTable() {
           Page 1 of 1
         </Typography>
       </CardFooter>
+      <Dialog open={openAdd} handler={() => setOpenAdd(false)} size="sm">
+        <DialogHeader>Tambah Pemesanan</DialogHeader>
+        <DialogBody className="space-y-4">
+          <Input
+            label="Nama Pemesan"
+            value={newData.nama_pemesan}
+            onChange={(e) =>
+              setNewData({ ...newData, nama_pemesan: e.target.value })
+            }
+          />
+          <Input
+            label="Email"
+            value={newData.email}
+            onChange={(e) => setNewData({ ...newData, email: e.target.value })}
+          />
+          <Input
+            label="Nomor Telepon"
+            value={newData.nomor_telepon}
+            onChange={(e) =>
+              setNewData({ ...newData, nomor_telepon: e.target.value })
+            }
+          />
+          <Input
+            label="Kode Paket"
+            value={newData.kode_paket}
+            onChange={(e) =>
+              setNewData({ ...newData, kode_paket: e.target.value })
+            }
+          />
+          <Input
+            label="Jumlah Orang"
+            type="number"
+            value={newData.jumlah_orang}
+            onChange={(e) =>
+              setNewData({
+                ...newData,
+                jumlah_orang: parseInt(e.target.value),
+              })
+            }
+          />
+          <Input
+            label="Tanggal Pesan"
+            type="date"
+            value={newData.tanggal_pesan}
+            onChange={(e) =>
+              setNewData({ ...newData, tanggal_pesan: e.target.value })
+            }
+          />
+          <select
+            value={newData.status}
+            onChange={(e) => setNewData({ ...newData, status: e.target.value })}
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          >
+            <option value="Pending">Pending</option>
+            <option value="Dikonfirmasi">Dikonfirmasi</option>
+            <option value="Dibatalkan">Dibatalkan</option>
+          </select>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="text" onClick={() => setOpenAdd(false)}>
+            Batal
+          </Button>
+          <Button variant="gradient" onClick={handleAdd}>
+            Simpan
+          </Button>
+        </DialogFooter>
+      </Dialog>
+
+      <Dialog open={openEdit} handler={() => setOpenEdit(false)} size="sm">
+        <DialogHeader>Edit Pemesanan</DialogHeader>
+        <DialogBody className="space-y-4">
+          <Input
+            label="Nama Pemesan"
+            value={editData?.nama_pemesan || ""}
+            onChange={(e) =>
+              setEditData((prev) => ({ ...prev, nama_pemesan: e.target.value }))
+            }
+          />
+          <Input
+            label="Email"
+            value={editData?.email || ""}
+            onChange={(e) =>
+              setEditData((prev) => ({ ...prev, email: e.target.value }))
+            }
+          />
+          <Input
+            label="Nomor Telepon"
+            value={editData?.nomor_telepon || ""}
+            onChange={(e) =>
+              setEditData((prev) => ({
+                ...prev,
+                nomor_telepon: e.target.value,
+              }))
+            }
+          />
+          <Input
+            label="Kode Paket"
+            value={editData?.kode_paket || ""}
+            onChange={(e) =>
+              setEditData((prev) => ({ ...prev, kode_paket: e.target.value }))
+            }
+          />
+          <Input
+            label="Jumlah Orang"
+            type="number"
+            value={editData?.jumlah_orang || ""}
+            onChange={(e) =>
+              setEditData((prev) => ({
+                ...prev,
+                jumlah_orang: parseInt(e.target.value),
+              }))
+            }
+          />
+          <Input
+            label="Tanggal Pesan"
+            type="date"
+            value={
+              editData?.tanggal_pesan
+                ? new Date(editData.tanggal_pesan).toISOString().split("T")[0]
+                : ""
+            }
+            onChange={(e) =>
+              setEditData((prev) => ({
+                ...prev,
+                tanggal_pesan: new Date(e.target.value),
+              }))
+            }
+          />
+          <select
+            value={editData?.status || ""}
+            onChange={(e) =>
+              setEditData((prev) => ({ ...prev, status: e.target.value }))
+            }
+            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+          >
+            <option value="Pending">Pending</option>
+            <option value="Dikonfirmasi">Dikonfirmasi</option>
+            <option value="Dibatalkan">Dibatalkan</option>
+          </select>
+        </DialogBody>
+        <DialogFooter>
+          <Button variant="text" onClick={() => setOpenEdit(false)}>
+            Batal
+          </Button>
+          <Button variant="gradient" onClick={handleUpdate}>
+            Simpan
+          </Button>
+        </DialogFooter>
+      </Dialog>
     </Card>
   );
 }

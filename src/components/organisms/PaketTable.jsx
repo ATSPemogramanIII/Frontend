@@ -31,17 +31,8 @@ const TABLE_HEAD = [
 ];
 
 export function PaketTable() {
-  const { pakets, loading, error, retry } = usePaket();
+  const { pakets, error, retry } = usePaket();
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center h-64">
-        <TypographyAtom variant="h6" color="gray">
-          Loading...
-        </TypographyAtom>
-      </div>
-    );
-  }
 
   if (error) {
     return (
